@@ -2,63 +2,34 @@ close all
 clear variables
 clc
 
-num_days = 10;
-num_humans = 10;
 
-% Linking plots to data
-% https://www.mathworks.com/help/matlab/creating_plots/making-graphs-responsive-with-data-linking.html
+%% Constants
+num_days = 100;
+num_humans = 100;
+city_dimensions = [100; 100];
+show_everyday_plot = true;
 
-h1 = human([0; 0]);
+
+%% Simulation             
+prague = city(city_dimensions, num_humans);
+
+progress_bar = waitbar(0,'1','Name','COVID-19 simulation progress',...
+                       'CreateCancelBtn','setappdata(gcbf,''cancelling'',1)');
 
 sim_fig = figure('Name', 'COVID-19 Monte Carlo Simulation', ...
                  'NumberTitle', 'off');
-
-plot(h1.position(1), h1.position(2), 'o')
-hold on
-
-plot(h1.path(1, 1:end), h1.path(2, 1:end))
-hold on
-
- % graph properties
-% axis([-10 10 -10 10])
-% grid on
-% xlabel('x')
-% ylabel('y')
-% legend('human')
-
-pop = population(num_humans);
-
+             
 for k = 1:num_days
+    waitbar(k/num_days, progress_bar, ...
+            sprintf('%d/%d days', k, num_days));
     
-    for h = [pop.humans{:}]
-        h.plot(sim_fig);
-        h.move_to_random_position();
+    if getappdata(progress_bar, 'cancelling')
+        break
     end
     
-    % marker plots
-%     plot(t(k),y(k),'x')
-%     hold on
-%     plot(h1.position(1), h1.position(2), 'o')
-%     hold on
-%     plot(t(k),y2(k),'o')
-%     hold on
-    
-    % line plots
-%     plot(t(1:k),y(1:k))
-%     hold on
-%     plot(h1.path(1, 1:k), h1.path(2, 1:k))
-%     hold on
-%     plot(t(1:k),y2(1:k))
-    
-%     h1.plot(sim_fig);
-    pause(0.1)
-%     h1.move_to_random_position();
-    
-    if k ~= num_days
-        clf
-    end
+    prague.simulate_one_day(show_plot=show_everyday_plot);
 end
 
-% for h = [pop.humans{:}]
-%     h.plot(sim_fig);
-% end
+delete(progress_bar);
+
+prague.plot_simulation();
