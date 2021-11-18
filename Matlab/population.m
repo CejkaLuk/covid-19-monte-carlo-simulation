@@ -1,5 +1,5 @@
 classdef population < handle
-    %POPULATION Collection of all humans.
+    %POPULATION Class representing all humans in the simulation.
     %   This class will contain a set number of humans.
     
     properties
@@ -9,15 +9,11 @@ classdef population < handle
     
     methods
         function obj = population(num_humans)
-            %POPULATION Create an array of num_humans human classes that
-            %start on certain coordinates
-            %   First iteration: humans will be spread out equally
+            %POPULATION Construct a population.
+            %   Params:
+            %       - num_humans := number of humans in the population.
             
             obj.size = num_humans;
-            
-            for i=1:num_humans
-                obj.humans{i} = human([i*sin(i); i*cos(i)]);
-            end
         end
     end
 end
