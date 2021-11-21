@@ -6,33 +6,86 @@ classdef human < handle
     
     properties
         path
-        position
-        health_status % (Susceptible), (Infected), (Recovered/Removed)
+        position % Struct: cartesian, polar
+        health_status % (susceptible), (infected), (recovered/removed)
+        movement % = Struct('base', 0, 'mean', 0, 'std_var', 0);
     end
     
     methods
-        function obj = human(initial_pos)
+        function obj = human(initial_pos, options)
             %HUMAN Construct a human.
-            %   Params:
-            %       - initial_position := x and y coordinates in a 2-element
-            %         a column vector.
+            
+            arguments
+                initial_pos % x and y coordinates in a 2-element a column vector.
+                options.base_movement (1, 1) {mustBeFloat} = 7.9; % Base length of a grid shell from paper -> used to set random
+                                                                  % movement length of Human every day.
+            end
             
             assert( isequal(size(initial_pos), [2 1]) );
             
-            obj.position = initial_pos;
+            obj.position.cartesian = initial_pos;
             obj.append_pos_to_path(initial_pos)
             
-            obj.health_status = 'Susceptible';
+            obj.movement.base = options.base_movement;
+            obj.movement.mean = 1/4 * obj.movement.base;
+            obj.movement.std_var = 1/12 * obj.movement.base;
+            
+            obj.health_status = 'susceptible';
         end
         
-        function move_to_random_position(obj)
-            %MOVE_TO_RANDOM_POSITION Move the human to a new random position 
+        function move_to_random_position(obj, options)
+            %MOVE_TO_RANDOM_POSITION Move the human to a new random
+            % position.
+            % This position can be generated using cartesian or
+            % polar coordinates.
+            
+            arguments
+                obj
+                options.coords {mustBeTextScalar} = "polar";
+            end
+            
+            if options.coords == "cartesian"
+                obj.move_to_random_position_cartesian();
+            elseif options.coords == "polar"
+                obj.move_to_random_position_polar();
+            else
+                error('Error. Random coordinates can only be generated using "cartesian" or "polar" coordinate systems!')
+            end
+        end
+        
+        function move_to_random_position_polar(obj)
+            %MOVE_TO_RANDOM_POSITION_CARTESIAN Move the human to a new random  
+            % position that is first generated in polar coordinates and then
+            % converted to cartesian.
+            % Theta is from a uniform distribution and rho is from a normal
+            % distribution.
+            
+            rand_theta = rand() * 2*pi;
+            rand_rho = normrnd(obj.movement.mean, obj.movement.std_var);
+            obj.position.polar = [rand_theta; rand_rho];
+            
+            [rand_x, rand_y] = pol2cart(rand_theta, rand_rho);
+            
+            new_pos = [obj.position.cartesian(1) + rand_x; ...
+                       obj.position.cartesian(2) + rand_y];
+
+            obj.move_to(new_pos);
+        end
+        
+        function move_to_random_position_cartesian(obj)
+            %MOVE_TO_RANDOM_POSITION_CARTESIAN Move the human to a new random  
+            % position that has both x and y generated from a normal distribution 
             % based on its current position.
             
-            random_pos = [obj.position(1) + normrnd(0, 1/12)*5; ...
-                          obj.position(2) + normrnd(0, 1/12)*5];
+            rand_x = normrnd(obj.movement.mean, obj.movement.std_var);
+            rand_y = normrnd(obj.movement.mean, obj.movement.std_var);
+            [rand_theta, rand_rho] = cart2pol(rand_x, rand_y);
+            obj.position.cartesian = [rand_theta; rand_rho];
             
-            obj.move_to(random_pos);
+            new_pos = [obj.position.cartesian(1) + rand_x; ...
+                       obj.position.cartesian(2) + rand_y];            
+            
+            obj.move_to(new_pos);
         end
         
         function move_to(obj, pos)
@@ -41,9 +94,9 @@ classdef human < handle
             
             assert( isa(pos, 'double') && isequal(size(pos), [2 1]) );
             
-            obj.position = pos;
+            obj.position.cartesian = pos;
             
-            obj.append_pos_to_path(obj.position);
+            obj.append_pos_to_path(obj.position.cartesian);
         end
         
         function append_pos_to_path(obj, pos)
@@ -58,10 +111,10 @@ classdef human < handle
             % this point.
             arguments
                 obj
-                options.plot_paths (1, 1) = true
+                options.plot_paths (1, 1) {mustBeA(options.plot_paths, 'logical')} = true;
             end
             
-            plot(obj.position(1), obj.position(2), 'o')
+            plot(obj.position.cartesian(1), obj.position.cartesian(2), 'o')
             hold on
             
             if options.plot_paths == true
