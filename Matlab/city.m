@@ -51,7 +51,7 @@ classdef city < handle
             % humans.
             arguments
                 obj
-                options.show_plot (1, 1) = false;
+                options.show_plot (1, 1) {mustBeA(options.show_plot, 'logical')} = false;
                 options.fig (1, 1) = false;
             end
             
@@ -70,7 +70,7 @@ classdef city < handle
             arguments
                 obj
                 options.fig (1, 1) = false;
-                options.plot_paths (1, 1) = true
+                options.plot_paths (1, 1) {mustBeA(options.plot_paths, 'logical')} = true
             end
             
             if isgraphics(options.fig,'figure')
