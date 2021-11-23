@@ -7,6 +7,7 @@ classdef city < handle
         dimensions
         area
         population
+        plots
     end
     
     methods
@@ -59,6 +60,48 @@ classdef city < handle
             end
             
             obj.population.update_humans();
+            obj.population.humans_by_status.all = [obj.population.humans{:}];
+            obj.initialize_plots();
+        end
+        
+        function initialize_plots(obj)
+            %INITIALIZE_PLOTS Initialize the plots as variables with a
+            % dummy array and make the plotted points invisible.
+            % The data in these plots needs to be replaced and the plots
+            % needs to be made visible to see output.
+                                   
+            default_blue_color = [0 0.4470 0.7410];
+            dummy_array = [0; 0];
+            
+            obj.plots.susceptible = plot(dummy_array(1, :), ...
+                                         dummy_array(2, :), ...
+                                         'o', ...
+                                         'MarkerEdgeColor', default_blue_color, ...
+                                         'MarkerFaceColor', default_blue_color);
+            obj.plots.susceptible.Visible = 'off';
+            
+            hold on
+            
+            obj.plots.infected = plot(dummy_array(1, :), ...
+                                      dummy_array(2, :), ...
+                                      'o', ...
+                                      'MarkerEdgeColor', default_blue_color, ...
+                                      'MarkerFaceColor', "red");
+            obj.plots.infected.Visible = 'off';
+
+            obj.plots.recovered = plot(dummy_array(1, :), ...
+                                       dummy_array(2, :), ...
+                                       'o', ...
+                                       'MarkerEdgeColor', default_blue_color, ...
+                                       'MarkerFaceColor', [200 200 200]/255);
+            obj.plots.recovered.Visible = 'off';
+
+            axis(obj.get_bounds())
+            grid on
+
+            xlabel('x [m]')
+            ylabel('y [m]')
+            hold off
         end
         
         function simulate_day(obj, day, options)
@@ -112,7 +155,67 @@ classdef city < handle
                 end
             end
             
-            for human = [obj.population.humans{:}]
+            if ~options.plot_paths
+                obj.plot_humans_fast(day);
+            else
+                obj.plot_humans_with_paths(day);
+            end
+        end
+        
+        function plot_humans_fast(obj, day)
+            %PLOT_HUMANS_FAST Plot all humans based on their status using
+            % predefined plot handles.
+            
+            arguments
+                obj
+                day (1, 1) {mustBeInteger, mustBeNonnegative};
+            end
+            
+            susceptible_humans_positions = [obj.population.humans_by_status.susceptible.position];
+            infected_humans_positions = [obj.population.humans_by_status.infected.position];
+            recovered_humans_positions = [obj.population.humans_by_status.recovered.position];
+            
+            if ~isempty(susceptible_humans_positions)
+                obj.plots.susceptible.Visible = 'on';
+                set(obj.plots.susceptible, {'XData', 'YData'}, {susceptible_humans_positions(1, :), ...
+                                                                susceptible_humans_positions(2, :)});
+            else
+                obj.plots.susceptible.Visible = 'off';
+            end
+            
+            if ~isempty(infected_humans_positions)
+                obj.plots.infected.Visible = 'on';
+                set(obj.plots.infected, {'XData', 'YData'}, {infected_humans_positions(1, :), ...
+                                                             infected_humans_positions(2, :)});
+            else
+                obj.plots.infected.Visible = 'off';
+            end
+            
+            if ~isempty(recovered_humans_positions)
+                obj.plots.recovered.Visible = 'on';
+                set(obj.plots.recovered, {'XData', 'YData'}, {recovered_humans_positions(1, :), ...
+                                                              recovered_humans_positions(2, :)});
+            else
+                obj.plots.recovered.Visible = 'off';
+            end
+            
+            title(sprintf('Day %d', day))
+            
+            drawnow
+        end
+
+        function plot_humans_with_paths(obj, day, options)
+            %PLOT_HUMANS_WITH_PATHS Plot humans and their paths - given that the
+            % paths are not turned off.
+            % This plot is very slow.
+            
+            arguments
+                obj
+                day (1, 1) {mustBeInteger, mustBeNonnegative};
+                options.plot_paths (1, 1) {mustBeA(options.plot_paths, 'logical')} = true;
+            end
+            
+            for human = obj.population.humans_by_status.all
                 human.plot(plot_paths=options.plot_paths);
             end
 

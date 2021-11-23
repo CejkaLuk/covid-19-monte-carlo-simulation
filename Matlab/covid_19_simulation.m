@@ -5,16 +5,16 @@ clc
 
 %% Constants
 num_days = 100;
-num_humans = 100;
-city_dimensions = [100; 100];
+num_humans = 2000;
+city_dimensions = [1000; 1000];
 show_everyday_plot = true;
 plot_paths = false;
-save_as_gif = false;
+save_as_gif = true;
 
 
 %% Simulation
 
-sim_fig = figure('Name', 'COVID-19 Monte Carlo Simulation', ...
+sim_fig = figure('Name', 'COVID-19 Monte Carlo Simulation of a city', ...
                  'NumberTitle', 'off', 'visible', 'off');
 
 filename = "simulation_gifs/simulation_" + string(floor(posixtime(datetime))) + ".gif";
