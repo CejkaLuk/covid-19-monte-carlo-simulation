@@ -14,9 +14,6 @@ save_as_gif = false;
 
 %% Simulation
 
-progress_bar = waitbar(0,'1','Name','COVID-19 simulation progress',...
-                       'CreateCancelBtn','setappdata(gcbf,''cancelling'',1)');
-
 sim_fig = figure('Name', 'COVID-19 Monte Carlo Simulation', ...
                  'NumberTitle', 'off', 'visible', 'off');
 
@@ -30,13 +27,6 @@ prague.plot_simulation(0, ...
                        save_as_gif=save_as_gif);
 
 for day = 1:num_days
-    waitbar(day/num_days, progress_bar, ...
-            sprintf('%d/%d days', day, num_days));
-    
-    if getappdata(progress_bar, 'cancelling')
-        break
-    end
-
     prague.simulate_day(day, ...
                         show_plot=show_everyday_plot, ...
                         plot_paths=plot_paths, ...
@@ -45,8 +35,6 @@ for day = 1:num_days
                         save_as_gif=save_as_gif);
     
 end
-
-delete(progress_bar);
 
 prague.plot_simulation(num_days, ...
                        plot_paths=plot_paths, ...
