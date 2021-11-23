@@ -6,7 +6,7 @@ classdef human < handle
     
     properties
         path
-        position % Struct: cartesian, polar
+        position % Assumend cartesian
         health_status % (susceptible), (infected), (recovered)
         movement % = Struct('base', 0, 'mean', 0, 'std_var', 0);
         infection % = Struct('first_day', 0, 'infectious_duration', 0, 'mean_distance', 0, 'exp_distr.lambda', 0)
@@ -67,12 +67,11 @@ classdef human < handle
             
             rand_theta = rand() * 2*pi;
             rand_rho = normrnd(obj.movement.mean, obj.movement.std_var);
-            obj.position.polar = [rand_theta; rand_rho];
             
             [rand_x, rand_y] = pol2cart(rand_theta, rand_rho);
             
-            new_pos = [obj.position.cartesian(1) + rand_x; ...
-                       obj.position.cartesian(2) + rand_y];
+            new_pos = [obj.position(1) + rand_x; ...
+                       obj.position(2) + rand_y];
 
             obj.set_position(new_pos);
         end
@@ -84,11 +83,9 @@ classdef human < handle
             
             rand_x = normrnd(obj.movement.mean, obj.movement.std_var);
             rand_y = normrnd(obj.movement.mean, obj.movement.std_var);
-            [rand_theta, rand_rho] = cart2pol(rand_x, rand_y);
-            obj.position.cartesian = [rand_theta; rand_rho];
             
-            new_pos = [obj.position.cartesian(1) + rand_x; ...
-                       obj.position.cartesian(2) + rand_y];            
+            new_pos = [obj.position(1) + rand_x; ...
+                       obj.position(2) + rand_y];            
             
             obj.set_position(new_pos);
         end
@@ -99,9 +96,9 @@ classdef human < handle
             
             assert( isa(pos, 'double') && isequal(size(pos), [2 1]) );
             
-            obj.position.cartesian = pos;
+            obj.position = pos;
             
-            obj.append_pos_to_path(obj.position.cartesian);
+            obj.append_pos_to_path(obj.position);
         end
         
         function append_pos_to_path(obj, pos)
@@ -122,7 +119,7 @@ classdef human < handle
             
             default_blue_color = [0 0.4470 0.7410];
             
-            plot(obj.position.cartesian(1), obj.position.cartesian(2), 'o', ...
+            plot(obj.position(1), obj.position(2), 'o', ...
                  'MarkerEdgeColor', default_blue_color, ...
                  'MarkerFaceColor', obj.get_color_of_health_status())
             hold on
@@ -168,7 +165,7 @@ classdef human < handle
                 day (1, 1) {mustBeInteger, mustBeNonnegative};
             end
             
-            if day == obj.infection.last_day
+            if day >= obj.infection.last_day
                 obj.set_health_status("recovered");
             end
         end
@@ -210,8 +207,9 @@ classdef human < handle
                 human (1, 1) {mustBeA(human, 'human')};
             end
             
-            human_pos = human.position.cartesian;
-            distance = pdist([obj.position.cartesian.'; human_pos']);
+            human_pos = human.position;
+            distance = sqrt((obj.position(1)-human_pos(1))^2 + ...
+                            (obj.position(2)-human_pos(2))^2);
         end
     end
 end
