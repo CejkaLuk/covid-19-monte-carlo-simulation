@@ -7,30 +7,35 @@ classdef human < handle
     properties
         path
         position % Struct: cartesian, polar
-        health_status % (susceptible), (infected), (recovered/removed)
+        health_status % (susceptible), (infected), (recovered)
         movement % = Struct('base', 0, 'mean', 0, 'std_var', 0);
+        infection % = Struct('first_day', 0, 'infectious_duration', 0, 'mean_distance', 0, 'exp_distr.lambda', 0)
+        city_bounds
     end
     
     methods
-        function obj = human(initial_pos, options)
+        function obj = human(initial_pos, infectious_duration,  options)
             %HUMAN Construct a human.
             
             arguments
                 initial_pos % x and y coordinates in a 2-element a column vector.
-                options.base_movement (1, 1) {mustBeFloat} = 7.9; % Base length of a grid shell from paper -> used to set random
-                                                                  % movement length of Human every day.
+                infectious_duration (1, 1) {mustBeFloat};
+                options.base_movement (1, 1) {mustBeFloat}; % Base length of a grid shell from paper -> used to set random
+                                                            % movement length of Human every day.
+                options.health_status (1, 1) {mustBeTextScalar} = "susceptible";
+                options.mean_infection_distance (1, 1) {mustBeFloat} = 8; % Mean infection distance in meters.
             end
             
-            assert( isequal(size(initial_pos), [2 1]) );
-            
-            obj.position.cartesian = initial_pos;
-            obj.append_pos_to_path(initial_pos)
+            obj.set_position(initial_pos);
             
             obj.movement.base = options.base_movement;
             obj.movement.mean = 1/4 * obj.movement.base;
             obj.movement.std_var = 1/12 * obj.movement.base;
             
-            obj.health_status = 'susceptible';
+            obj.health_status = options.health_status;
+            
+            obj.infection.duration = infectious_duration;
+            obj.infection.mean_distance = options.mean_infection_distance;
         end
         
         function move_to_random_position(obj, options)
@@ -69,7 +74,7 @@ classdef human < handle
             new_pos = [obj.position.cartesian(1) + rand_x; ...
                        obj.position.cartesian(2) + rand_y];
 
-            obj.move_to(new_pos);
+            obj.set_position(new_pos);
         end
         
         function move_to_random_position_cartesian(obj)
@@ -85,11 +90,11 @@ classdef human < handle
             new_pos = [obj.position.cartesian(1) + rand_x; ...
                        obj.position.cartesian(2) + rand_y];            
             
-            obj.move_to(new_pos);
+            obj.set_position(new_pos);
         end
         
-        function move_to(obj, pos)
-            %MOVE_TO Move the human to a new [x; y] position and append
+        function set_position(obj, pos)
+            %SET_POSITION Move the human to a new [x; y] position and append
             % the new position to the human's path.
             
             assert( isa(pos, 'double') && isequal(size(pos), [2 1]) );
@@ -109,12 +114,17 @@ classdef human < handle
         function plot(obj, options)
             %PLOT Plot the human's current position and their path up to
             % this point.
+            
             arguments
                 obj
                 options.plot_paths (1, 1) {mustBeA(options.plot_paths, 'logical')} = true;
             end
             
-            plot(obj.position.cartesian(1), obj.position.cartesian(2), 'o')
+            default_blue_color = [0 0.4470 0.7410];
+            
+            plot(obj.position.cartesian(1), obj.position.cartesian(2), 'o', ...
+                 'MarkerEdgeColor', default_blue_color, ...
+                 'MarkerFaceColor', obj.get_color_of_health_status())
             hold on
             
             if options.plot_paths == true
@@ -122,15 +132,86 @@ classdef human < handle
             end
         end
         
-        function days_walked = get_days_walked(obj)
-            %GET_DAYS_WALKED Return the number of days this human has
-            % been alive for.
-            %  In the context of the simulation, a human walks every single
-            %  day, so the number of days walked is the number of days the
-            %  simulation has been running for.
+        function set_health_status(obj, health_status, options)
+            %SET_HEALTH_STATUS Set the health status of the human.
+            % If the human is about to be infected, we need to know the
+            % day.
+            % The human will never be labelled as infected, if they're
+            % already infected - the function in population only considers
+            % susceptible humans to infect.
             
-            % The simulation starts on day 0.
-            days_walked = size(obj.path, 2) - 1;
+            arguments
+                obj
+                health_status (1, 1) {mustBeTextScalar, mustBeNonempty};
+                options.day (1, 1) {mustBeInteger, mustBeNonnegative};
+            end
+
+            assert(ismember(health_status, ["susceptible", "infected", "recovered"]), ...
+                   "Error! Unrecognized health status of human! Valid values are: 'susceptible', 'infected', 'recovered'.");
+            if health_status == "infected"
+                mustBeNonempty(options.day);
+            end
+            
+            if health_status == "infected"
+                obj.infection.first_day = options.day;
+                obj.infection.last_day = obj.infection.first_day + obj.infection.duration;
+            end              
+               
+            obj.health_status = health_status;
+        end
+        
+        function check_recovered(obj, day)
+            %CHECK_RECOVERED Check if the human is recovered on a specific day.
+            
+            arguments
+                obj
+                day (1, 1) {mustBeInteger, mustBeNonnegative};
+            end
+            
+            if day == obj.infection.last_day
+                obj.set_health_status("recovered");
+            end
+        end
+        
+        function color = get_color_of_health_status(obj)
+            %GET_COLOR_OF_HEALTH_STATUS Get colour representing each health
+            % status.
+            
+            switch obj.health_status
+                case "susceptible"
+                    color = [0 0.4470 0.7410]; % Default light blue
+                case "infected"
+                    color = "red";
+                otherwise
+                    color = [200 200 200]/255;
+            end
+        end
+        
+        function prob = get_infection_prob_of_human(obj, human)
+            %GET_INFECTION_PROB_OF_HUMAN Get the probability that this
+            % human will infect a given human.
+            
+            arguments
+                obj
+                human (1, 1) {mustBeA(human, 'human')};
+            end
+            
+            distance = obj.get_eucledian_distance_from_human(human);
+            
+            prob = round(exp(-distance/obj.infection.mean_distance), 2);
+        end
+        
+        function distance = get_eucledian_distance_from_human(obj, human)
+            %GET_EUCLEDIAN_DISTANCE_FROM_HUMAN Get the distance from this
+            % human to a given human.
+            
+            arguments
+                obj
+                human (1, 1) {mustBeA(human, 'human')};
+            end
+            
+            human_pos = human.position.cartesian;
+            distance = pdist([obj.position.cartesian.'; human_pos']);
         end
     end
 end
