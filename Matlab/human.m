@@ -6,10 +6,10 @@ classdef human < handle
     
     properties
         path
-        position % Assumend cartesian
-        health_status % (susceptible), (infected), (recovered)
-        movement % = Struct('base', 0, 'mean', 0, 'std_var', 0);
-        infection % = Struct('first_day', 0, 'infectious_duration', 0, 'mean_distance', 0, 'exp_distr.lambda', 0)
+        position % Assumed cartesian
+        health_status % (susceptible), (infectious), (recovered)
+        movement % = Struct('base', 0, 'mean', 0, 'std_var', 0, 'limits', [0 0 0 0]);
+        infection % = Struct('first_day', 0, 'duration', 0, 'last_day', 'mean_distance', 0)
         city_bounds
     end
     
@@ -61,7 +61,7 @@ classdef human < handle
         end
         
         function move_to_random_position_polar(obj)
-            %MOVE_TO_RANDOM_POSITION_CARTESIAN Move the human to a new random  
+            %MOVE_TO_RANDOM_POSITION_POLAR Move the human to a new random  
             % position that is first generated in polar coordinates and then
             % converted to cartesian.
             % Theta is from a uniform distribution and rho is from a normal
@@ -114,21 +114,32 @@ classdef human < handle
                 return
             end
             
-            x_lower = obj.movement.limits(1);
-            x_upper = obj.movement.limits(2);
-            y_lower = obj.movement.limits(3);
-            y_upper = obj.movement.limits(4);
+            new_pos = obj.keep_position_in_bounds(new_pos, obj.movement.limits);
+        end
+        
+        function pos = keep_position_in_bounds(obj, pos, bounds)
             
-            if new_pos(1) < x_lower
-                new_pos(1) = x_lower;
-            elseif x_upper < new_pos(1)
-                new_pos(1) = x_upper;
+            arguments
+                obj
+                pos (2, 1) {mustBeFloat, mustBeNonempty};
+                bounds (1, 4) {mustBeFloat, mustBeNonempty};
             end
             
-            if new_pos(2) < y_lower
-                new_pos(2) = y_lower;
-            elseif y_upper < new_pos(2)
-                new_pos(2) = y_upper;
+            x_lower = bounds(1);
+            x_upper = bounds(2);
+            y_lower = bounds(3);
+            y_upper = bounds(4);
+            
+            if pos(1) < x_lower
+                pos(1) = x_lower;
+            elseif x_upper < pos(1)
+                pos(1) = x_upper;
+            end
+            
+            if pos(2) < y_lower
+                pos(2) = y_lower;
+            elseif y_upper < pos(2)
+                pos(2) = y_upper;
             end
         end
         
@@ -137,6 +148,26 @@ classdef human < handle
             % the last element to the human's path.
             
             obj.path(:, end + 1) = pos;
+        end
+        
+        function infect_susceptible_humans(obj, day, susceptible_humans)
+            %INFECT_SUSCEPTIBLE_HUMANS Calculate how a given human will
+            % infect susceptible humans on a given day.
+            
+            arguments
+                obj
+                day (1, 1) {mustBeInteger, mustBeNonnegative};
+                susceptible_humans {mustBeA(susceptible_humans, 'human')};
+            end
+            
+            for susceptible_human = susceptible_humans                
+                infection_prob = obj.get_infection_prob_of_human(susceptible_human);
+                
+                if rand() <= infection_prob
+                    susceptible_human.set_health_status("infectious", ...
+                                                        day=day);
+                end
+            end                
         end
         
         function plot(obj, options)
@@ -162,10 +193,10 @@ classdef human < handle
         
         function set_health_status(obj, health_status, options)
             %SET_HEALTH_STATUS Set the health status of the human.
-            % If the human is about to be infected, we need to know the
+            % If the human is about to be infectious, we need to know the
             % day.
-            % The human will never be labelled as infected, if they're
-            % already infected - the function in population only considers
+            % The human will never be labelled as infectious, if they're
+            % already infectious - the function in population only considers
             % susceptible humans to infect.
             
             arguments
@@ -174,13 +205,12 @@ classdef human < handle
                 options.day (1, 1) {mustBeInteger, mustBeNonnegative};
             end
 
-            assert(ismember(health_status, ["susceptible", "infected", "recovered"]), ...
-                   "Error! Unrecognized health status of human! Valid values are: 'susceptible', 'infected', 'recovered'.");
-            if health_status == "infected"
-                mustBeNonempty(options.day);
-            end
+            assert(ismember(health_status, ["susceptible", "infectious", "recovered"]), ...
+                   "Error! Unrecognized health status of human! Valid values are: 'susceptible', 'infectious', 'recovered'.");
             
-            if health_status == "infected"
+            if health_status == "infectious"
+                mustBeNonempty(options.day);
+                
                 obj.infection.first_day = options.day;
                 obj.infection.last_day = obj.infection.first_day + obj.infection.duration;
             end              
@@ -208,7 +238,7 @@ classdef human < handle
             switch obj.health_status
                 case "susceptible"
                     color = [0 0.4470 0.7410]; % Default light blue
-                case "infected"
+                case "infectious"
                     color = "red";
                 otherwise
                     color = [200 200 200]/255;

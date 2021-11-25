@@ -24,4 +24,4 @@ sim.run();
 
 sim.process_data();
 
-sim.display_data();
+sim.visualize_data();
