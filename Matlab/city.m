@@ -31,6 +31,8 @@ classdef city < handle
             % population of humans in this city uniformly distributed over
             % the area of the city.
             
+            day = 1;
+            
             obj.population = population(pop_size);
             n = obj.population.size;
             
@@ -55,11 +57,11 @@ classdef city < handle
                                                  base_movement=1/12*x_max);
                 if ismember(i, rand_infected_idx)
                     obj.population.humans{i}.set_health_status("infected", ...
-                                                               day=1);
+                                                               day=day);
                 end
             end
             
-            obj.population.update_humans();
+            obj.population.update_humans(day);
             obj.population.humans_by_status.all = [obj.population.humans{:}];
             obj.initialize_plots();
         end
@@ -119,7 +121,7 @@ classdef city < handle
             end
             
             obj.population.update_health_status(day);
-            obj.population.update_humans();
+            obj.population.update_humans(day);
             
             for human = [obj.population.humans{:}]
                 human.move_to_random_position()
