@@ -24,13 +24,15 @@ classdef human < handle
                                                             % movement length of Human every day.
                 options.health_status (1, 1) {mustBeTextScalar} = "susceptible";
                 options.mean_infection_distance (1, 1) {mustBeFloat} = 8; % Mean infection distance in meters.
+                options.movement_limits (1, 4) {mustBeFloat} = nan;
             end
-            
-            obj.set_position(initial_pos);
             
             obj.movement.base = options.base_movement;
             obj.movement.mean = 1/4 * obj.movement.base;
             obj.movement.std_var = 1/12 * obj.movement.base;
+            obj.movement.limits = options.movement_limits;
+            
+            obj.set_position(initial_pos);
             
             obj.health_status = options.health_status;
             
@@ -96,9 +98,38 @@ classdef human < handle
             
             assert( isa(pos, 'double') && isequal(size(pos), [2 1]) );
             
-            obj.position = pos;
+            obj.position = obj.correct_pos_if_out_of_bounds(pos);
             
             obj.append_pos_to_path(obj.position);
+        end
+        
+        function new_pos = correct_pos_if_out_of_bounds(obj, pos)
+            %CORRECT_POST_IF_OUT_OF_BOUNDS If the position is out of bounds
+            % set for the human -> redefine position to be at bounds.
+            % Otherwise leave position as is.
+            
+            new_pos = pos;
+            
+            if isnan(obj.movement.limits)    
+                return
+            end
+            
+            x_lower = obj.movement.limits(1);
+            x_upper = obj.movement.limits(2);
+            y_lower = obj.movement.limits(3);
+            y_upper = obj.movement.limits(4);
+            
+            if new_pos(1) < x_lower
+                new_pos(1) = x_lower;
+            elseif x_upper < new_pos(1)
+                new_pos(1) = x_upper;
+            end
+            
+            if new_pos(2) < y_lower
+                new_pos(2) = y_lower;
+            elseif y_upper < new_pos(2)
+                new_pos(2) = y_upper;
+            end
         end
         
         function append_pos_to_path(obj, pos)
