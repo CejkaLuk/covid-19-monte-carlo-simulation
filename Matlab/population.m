@@ -29,11 +29,11 @@ classdef population < handle
             end
             
             obj.humans_by_status.susceptible = obj.get_susceptible_humans();
-            obj.humans_by_status.infected = obj.get_infected_humans();
+            obj.humans_by_status.infectious = obj.get_infectious_humans();
             obj.humans_by_status.recovered = obj.get_recovered_humans();
             
             obj.sir_data.num_susceptible(day) = length(obj.humans_by_status.susceptible);
-            obj.sir_data.num_infected(day) = length(obj.humans_by_status.infected);
+            obj.sir_data.num_infectious(day) = length(obj.humans_by_status.infectious);
             obj.sir_data.num_recovered(day) = length(obj.humans_by_status.recovered);
         end
         
@@ -46,14 +46,13 @@ classdef population < handle
                 day (1, 1) {mustBeInteger, mustBeNonnegative};
             end
 
-            obj.update_infected(day);
-
+            obj.update_infectious(day);
             obj.update_recovered(day);
         end
         
-        function update_infected(obj, day)
-            %UPDATE_INFECTED Update the infected portion of the population.
-            % In other words, update how the current infected will infect
+        function update_infectious(obj, day)
+            %UPDATE_INFECTIOUS Update the infectious portion of the population.
+            % In other words, update how the current infectious will infect
             % the susceptible.
             
             arguments
@@ -61,14 +60,14 @@ classdef population < handle
                 day (1, 1) {mustBeInteger, mustBeNonnegative};
             end
             
-            for human = obj.humans_by_status.infected
-                obj.infect_susceptible_humans(day, human);
+            for human = obj.humans_by_status.infectious
+                human.infect_susceptible_humans(day, obj.humans_by_status.susceptible);
             end
         end
         
         function update_recovered(obj, day)
             %UPDATE_RECOVERED Update the recovered portion of the population.
-            % In other words, update which of the infected are recovered on
+            % In other words, update which of the infectious are recovered on
             % a given day.
             
             arguments
@@ -76,36 +75,16 @@ classdef population < handle
                 day (1, 1) {mustBeInteger, mustBeNonnegative};
             end
             
-            for human = obj.humans_by_status.infected
+            for human = obj.humans_by_status.infectious
                 human.check_recovered(day);
             end
         end
         
-        function infect_susceptible_humans(obj, day, human)
-            %INFECT_SUSCEPTIBLE_HUMANS Calculate how a given human will
-            % infect susceptible humans on a given day.
+        function infectious_humans = get_infectious_humans(obj)
+            %GET_INFECTIOUS_HUMANS Return portion of humans that are
+            % infectious.
             
-            arguments
-                obj
-                day (1, 1) {mustBeInteger, mustBeNonnegative};
-                human (1, 1) {mustBeA(human, 'human')};
-            end
-            
-            for susceptible_human = obj.humans_by_status.susceptible                
-                infection_prob = human.get_infection_prob_of_human(susceptible_human);
-                
-                if rand() <= infection_prob
-                    susceptible_human.set_health_status("infected", ...
-                                                        day=day);
-                end
-            end                
-        end
-        
-        function infected_humans = get_infected_humans(obj)
-            %GET_INFECTED_HUMANS Return portion of humans that are
-            % infected.
-            
-            infected_humans = obj.get_humans_with_health_status("infected");
+            infectious_humans = obj.get_humans_with_health_status("infectious");
         end
         
         function susceptible_humans = get_susceptible_humans(obj)
@@ -117,7 +96,7 @@ classdef population < handle
         
         function recovered_humans = get_recovered_humans(obj)
             %GET_RECOVERED_HUMANS Return portion of humans that are
-            % infected.
+            % infectious.
             
             recovered_humans = obj.get_humans_with_health_status("recovered");
         end

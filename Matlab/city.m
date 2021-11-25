@@ -49,9 +49,9 @@ classdef city < handle
             beta = 2/3;
             rand_infectious_durations = ceil(gamrnd(alpha, 1/beta, n, 1));
             
-            percent_infected = 0.005; % 0.5%
-            num_infected = ceil(n*percent_infected);
-            rand_infected_idx = randi([1, n], num_infected, 1);
+            percent_infectious = 0.005; % 0.5%
+            num_infectious = ceil(n*percent_infectious);
+            rand_infectious_idx = randi([1, n], num_infectious, 1);
             
             if humans_stay_in_cities
                 movement_limits = obj.get_bounds();
@@ -65,8 +65,8 @@ classdef city < handle
                                                  rand_infectious_durations(i), ...
                                                  base_movement=1/12*x_max, ...
                                                  movement_limits=movement_limits);
-                if ismember(i, rand_infected_idx)
-                    obj.population.humans{i}.set_health_status("infected", ...
+                if ismember(i, rand_infectious_idx)
+                    obj.population.humans{i}.set_health_status("infectious", ...
                                                                day=day);
                 end
             end
@@ -94,12 +94,12 @@ classdef city < handle
             
             hold on
             
-            obj.plots.infected = plot(dummy_array(1, :), ...
-                                      dummy_array(2, :), ...
-                                      'o', ...
-                                      'MarkerEdgeColor', default_blue_color, ...
-                                      'MarkerFaceColor', "red");
-            obj.plots.infected.Visible = 'off';
+            obj.plots.infectious = plot(dummy_array(1, :), ...
+                                        dummy_array(2, :), ...
+                                        'o', ...
+                                        'MarkerEdgeColor', default_blue_color, ...
+                                        'MarkerFaceColor', "red");
+            obj.plots.infectious.Visible = 'off';
 
             obj.plots.recovered = plot(dummy_array(1, :), ...
                                        dummy_array(2, :), ...
@@ -117,8 +117,8 @@ classdef city < handle
             axis(obj.get_bounds())
             grid on
 
-            xlabel('x [m]')
-            ylabel('y [m]')
+            xlabel('x [m]', 'Interpreter', 'latex')
+            ylabel('y [m]', 'Interpreter', 'latex')
             hold off
         end
         
@@ -139,7 +139,7 @@ classdef city < handle
             obj.population.update_health_status(day);
             obj.population.update_humans(day);
             
-            for human = [obj.population.humans{:}]
+            for human = obj.population.humans_by_status.all
                 human.move_to_random_position()
             end
             
@@ -169,7 +169,7 @@ classdef city < handle
                 figure(options.fig)
                 
                 if options.save_as_gif
-                    obj.save_as_gif(options.filename, options.fig, day)
+                    save_as_gif(options.filename, options.fig, day)
                 end
             end
             
@@ -190,34 +190,19 @@ classdef city < handle
             end
             
             susceptible_humans_positions = [obj.population.humans_by_status.susceptible.position];
-            infected_humans_positions = [obj.population.humans_by_status.infected.position];
+            infectious_humans_positions = [obj.population.humans_by_status.infectious.position];
             recovered_humans_positions = [obj.population.humans_by_status.recovered.position];
             
-            if ~isempty(susceptible_humans_positions)
-                obj.plots.susceptible.Visible = 'on';
-                set(obj.plots.susceptible, {'XData', 'YData'}, {susceptible_humans_positions(1, :), ...
-                                                                susceptible_humans_positions(2, :)});
-            else
-                obj.plots.susceptible.Visible = 'off';
-            end
+            plot_by_status(obj.plots.susceptible, ...
+                           susceptible_humans_positions);
             
-            if ~isempty(infected_humans_positions)
-                obj.plots.infected.Visible = 'on';
-                set(obj.plots.infected, {'XData', 'YData'}, {infected_humans_positions(1, :), ...
-                                                             infected_humans_positions(2, :)});
-            else
-                obj.plots.infected.Visible = 'off';
-            end
+            plot_by_status(obj.plots.infectious, ...
+                           infectious_humans_positions);
             
-            if ~isempty(recovered_humans_positions)
-                obj.plots.recovered.Visible = 'on';
-                set(obj.plots.recovered, {'XData', 'YData'}, {recovered_humans_positions(1, :), ...
-                                                              recovered_humans_positions(2, :)});
-            else
-                obj.plots.recovered.Visible = 'off';
-            end
+            plot_by_status(obj.plots.recovered, ...
+                           recovered_humans_positions);
             
-            title(sprintf('Day %d', day))
+            title(sprintf('Simulation of humans in city: Day %d', day), 'Interpreter', 'latex')
             
             drawnow
         end
@@ -268,22 +253,6 @@ classdef city < handle
             city_bounds = [0 obj.dimensions(1) 0 obj.dimensions(2)];
         end
         
-        function save_as_gif(obj, filename, fig, day)
-            %SAVE_AS_GIF Save the current day to a gif file.
-
-            % Capture the plot as an image 
-            frame = getframe(fig); 
-            im = frame2im(frame); 
-            [imind, cm] = rgb2ind(im, 256); 
-
-            % Write to the GIF File  
-            if day == 1 
-                imwrite(imind, cm, filename, 'gif', 'Loopcount', inf); 
-            else 
-                imwrite(imind, cm, filename, 'gif', 'WriteMode', 'append'); 
-            end
-        end
-        
         function population_density = get_population_density(obj)
             %POPULATION_DENSITY Returns population density as the
             % population divided by the area of the city.
@@ -293,3 +262,28 @@ classdef city < handle
     end
 end
 
+function save_as_gif(filename, fig, day)
+    %SAVE_AS_GIF Save the current day to a gif file.
+
+    % Capture the plot as an image 
+    frame = getframe(fig); 
+    im = frame2im(frame); 
+    [imind, cm] = rgb2ind(im, 256); 
+
+    % Write to the GIF File  
+    if day == 1 
+        imwrite(imind, cm, filename, 'gif', 'Loopcount', inf); 
+    else 
+        imwrite(imind, cm, filename, 'gif', 'WriteMode', 'append'); 
+    end
+end
+
+function plot_by_status(h_plot, humans_positions)
+    if ~isempty(humans_positions)
+        h_plot.Visible = 'on';
+        set(h_plot, {'XData', 'YData'}, {humans_positions(1, :), ...
+                                         humans_positions(2, :)});
+    else
+        h_plot.Visible = 'off';
+    end
+end
