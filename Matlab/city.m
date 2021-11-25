@@ -11,7 +11,7 @@ classdef city < handle
     end
     
     methods
-        function obj = city(city_dimensions, pop_size)
+        function obj = city(city_dimensions, pop_size, humans_stay_in_city)
             %CITY Construct a city.
             %   Params:
             %       - city_dimensions := a column vector with x and y 
@@ -23,10 +23,13 @@ classdef city < handle
             obj.dimensions = city_dimensions;
             obj.area = city_dimensions(1) * city_dimensions(2);
             
-            obj.intialize_population_uniform_distr_pos(pop_size);
+            obj.plots.humans_stay_in_city = humans_stay_in_city;
+            
+            obj.intialize_population_uniform_distr_pos(pop_size, ...
+                                                       humans_stay_in_city);
         end
         
-        function intialize_population_uniform_distr_pos(obj, pop_size)
+        function intialize_population_uniform_distr_pos(obj, pop_size, humans_stay_in_cities)
             %INITIALIZE_POPULATION_UNIFORM_DISTR_POS Initialize the
             % population of humans in this city uniformly distributed over
             % the area of the city.
@@ -50,11 +53,18 @@ classdef city < handle
             num_infected = ceil(n*percent_infected);
             rand_infected_idx = randi([1, n], num_infected, 1);
             
+            if humans_stay_in_cities
+                movement_limits = obj.get_bounds();
+            else
+                movement_limits = nan;
+            end
+            
             for i=1:n
                 obj.population.humans{i} = human([rand_x_coords(i); ...
                                                   rand_y_coords(i)], ...
                                                  rand_infectious_durations(i), ...
-                                                 base_movement=1/12*x_max);
+                                                 base_movement=1/12*x_max, ...
+                                                 movement_limits=movement_limits);
                 if ismember(i, rand_infected_idx)
                     obj.population.humans{i}.set_health_status("infected", ...
                                                                day=day);
@@ -97,6 +107,12 @@ classdef city < handle
                                        'MarkerEdgeColor', default_blue_color, ...
                                        'MarkerFaceColor', [200 200 200]/255);
             obj.plots.recovered.Visible = 'off';
+            
+            if obj.plots.humans_stay_in_city
+                bounds = obj.get_bounds();
+                corners = [bounds(1) bounds(3) bounds(2) bounds(4)];
+                rectangle('Position', corners)
+            end
 
             axis(obj.get_bounds())
             grid on
