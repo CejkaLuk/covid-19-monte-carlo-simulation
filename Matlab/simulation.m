@@ -23,6 +23,7 @@ classdef simulation < handle
             obj.set_config(options.config);
             
             obj.data.dnc = zeros([1, obj.config.num_days]);
+            obj.data.R_e = nan([1, obj.config.num_days]);
         end
         
         function set_config(obj, config)
@@ -118,12 +119,14 @@ classdef simulation < handle
             %PROCESS_DATA Process data from simulation run.
             
             obj.gather_dnc();
+            obj.gather_R_e();
         end
         
         function display_data(obj)
             %DISPLAY_DATA Display/plot data from simulation run.
             
             obj.plot_dnc();
+            obj.plot_R_e();
         end
         
         function gather_dnc(obj)
@@ -137,6 +140,19 @@ classdef simulation < handle
             end
         end
         
+        function gather_R_e(obj)
+            %GATHER_R_E Gather R_e data over all days.
+            % Towards the end, when there are no new cases, this formula
+            % will divide by 0, so the data of R_e is not available for the
+            % entire period of te simulation.
+            
+            c = 1;
+            for day=2:obj.config.num_days
+                obj.data.R_e(day) = 1 + log(obj.city.population.sir_data.num_infected(day)/...
+                                      obj.city.population.sir_data.num_infected(day-1))^(1/c);
+            end
+        end
+
         function plot_dnc(obj)
             %PLOT_DNC Plot daily new cases in its own figure.
             
@@ -144,6 +160,35 @@ classdef simulation < handle
                              'NumberTitle', 'off', 'visible', 'off');
             figure(dnc_fig)
             plot(obj.data.dnc(:), '-o')
+            
+            title('Daily new cases (DNC) development in MC simulation', ...
+                  'interpreter', 'latex')
+              
+            legend('Daily new cases (DNC)', 'interpreter', 'latex')
+            
+            xlabel('Time [day]', 'interpreter', 'latex')
+            ylabel('Number of new cases per day', 'interpreter', 'latex')
+        end
+        
+        function plot_R_e(obj)
+            %PLOT_R_E Plot daily effective reproductive number (R_e)
+            
+            R_e_fig = figure('Name', 'Effective reproductive number (R_e)', ...
+                             'NumberTitle', 'off', 'visible', 'off');
+            figure(R_e_fig)
+            hold on
+            
+            plot(obj.data.R_e(:), '-o red')
+            yline(1, '-- red', 'LineWidth', 2)
+            
+            title('Effective reproductive number ($$R_e$$) development in MC simulation', ...
+                  'interpreter', 'latex')
+            legend('Effective reproductive number $$R_e$$', ...
+                   'Threshold level $$R_e(0) = R_0 = 1$$', ...
+                   'interpreter', 'latex')
+            
+            xlabel('Time [day]', 'interpreter', 'latex')
+            ylabel('Daily $$R_e$$', 'interpreter', 'latex')
         end
     end
     

@@ -6,6 +6,7 @@ classdef population < handle
         humans
         humans_by_status
         size
+        sir_data
     end
     
     methods
@@ -19,12 +20,21 @@ classdef population < handle
             obj.size = num_humans;
         end        
         
-        function update_humans(obj)
+        function update_humans(obj, day)
             %UPDATE_HUMANS Update the lists of humans by health status.
+            
+            arguments
+                obj
+                day (1, 1) {mustBeInteger, mustBePositive};
+            end
             
             obj.humans_by_status.susceptible = obj.get_susceptible_humans();
             obj.humans_by_status.infected = obj.get_infected_humans();
             obj.humans_by_status.recovered = obj.get_recovered_humans();
+            
+            obj.sir_data.num_susceptible(day) = length(obj.humans_by_status.susceptible);
+            obj.sir_data.num_infected(day) = length(obj.humans_by_status.infected);
+            obj.sir_data.num_recovered(day) = length(obj.humans_by_status.recovered);
         end
         
         function update_health_status(obj, day)
