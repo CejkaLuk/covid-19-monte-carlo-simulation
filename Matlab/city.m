@@ -52,10 +52,10 @@ classdef city < handle
                 obj.population.humans{i} = human([rand_x_coords(i); ...
                                                   rand_y_coords(i)], ...
                                                  rand_infectious_durations(i), ...
-                                                 base_movement=1/4*x_max);
+                                                 base_movement=1/12*x_max);
                 if ismember(i, rand_infected_idx)
                     obj.population.humans{i}.set_health_status("infected", ...
-                                                               day=0);
+                                                               day=1);
                 end
             end
             
@@ -112,8 +112,8 @@ classdef city < handle
                 obj
                 day (1, 1) {mustBeInteger, mustBeNonnegative};
                 options.show_plot (1, 1) {mustBeA(options.show_plot, 'logical')} = false;
-                options.plot_paths (1, 1) {mustBeA(options.plot_paths, 'logical')} = true;
-                options.fig (1, 1) = false;
+                options.plot_paths (1, 1) {mustBeA(options.plot_paths, 'logical')} = false;
+                options.fig (1, 1) {mustBeA(options.fig, 'matlab.ui.Figure')};
                 options.filename (1, 1) {mustBeTextScalar};
                 options.save_as_gif (1, 1) {mustBeA(options.save_as_gif, 'logical')} = false;
             end
@@ -259,7 +259,7 @@ classdef city < handle
             [imind, cm] = rgb2ind(im, 256); 
 
             % Write to the GIF File  
-            if day == 0 
+            if day == 1 
                 imwrite(imind, cm, filename, 'gif', 'Loopcount', inf); 
             else 
                 imwrite(imind, cm, filename, 'gif', 'WriteMode', 'append'); 
