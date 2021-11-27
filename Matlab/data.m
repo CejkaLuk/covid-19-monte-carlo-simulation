@@ -154,6 +154,8 @@ classdef data < handle
             
             xlabel('Time [day]', 'interpreter', 'latex')
             ylabel('Number of new cases per day', 'interpreter', 'latex')
+            
+            set(gca,'TickLabelInterpreter','latex');
         end
         
         function plot_R_e(obj)
@@ -189,6 +191,8 @@ classdef data < handle
             
             xlabel('Time [day]', 'interpreter', 'latex')
             ylabel('Daily $$R_e$$', 'interpreter', 'latex')
+            
+            set(gca,'TickLabelInterpreter','latex');
         end
         
         function plot_all(obj)
