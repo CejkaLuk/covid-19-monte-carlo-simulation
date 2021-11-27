@@ -167,6 +167,8 @@ classdef city < handle
             xlabel('x [m]', 'Interpreter', 'latex')
             ylabel('y [m]', 'Interpreter', 'latex')
             
+            set(gca,'TickLabelInterpreter','latex');
+            
             hold off
         end
         
@@ -318,6 +320,8 @@ classdef city < handle
                
             xlabel('x [m]', 'Interpreter', 'latex')
             ylabel('y [m]', 'Interpreter', 'latex')
+            
+            set(gca,'TickLabelInterpreter','latex');
             
             hold off
         end
