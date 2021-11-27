@@ -2,8 +2,11 @@ close all
 clear variables
 clc
 
-sim_fig = figure('Name', 'COVID-19 Monte Carlo Simulation of a city', ...
-                 'NumberTitle', 'off', 'visible', 'off');
+
+%% Configuration (optional)
+sim_fig = figure('Name', 'COVID-19 Monte Carlo Simulation of humans in a city', ...
+                 'NumberTitle', 'off', ...
+                 'visible', 'off');
 
 filename = "simulation_" + string(floor(posixtime(datetime))) + ".gif";
 
@@ -17,11 +20,19 @@ config = struct('num_days',            100, ...
                 'sim_fig',             sim_fig, ...
                 'filename',            filename);
 
-                   
+%% Simulation
+% Create a simulation with a given configuration (optional)
 sim = simulation(config=config);
 
+% Print the configuration
+sim.print_config();
+
+% Run the simulation
 sim.run();
 
+%% Post-processing
+% Process the data of the simulation
 sim.process_data();
 
+% Display the data of the simulation
 sim.visualize_data();
