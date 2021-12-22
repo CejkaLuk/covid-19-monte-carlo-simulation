@@ -141,16 +141,16 @@ Let us consider a sample case where a susceptible human being comes into contact
 
 
 \subsection{Measured statistics}
-The aim of this protocol is reproduce the following statistics from the referenced paper \cite{Maltezos2021}: Daily New Cases (DNC) and the effective reproductive number $\textrm{R}_\textrm{e}$.
+The aim of this protocol is reproduce the following statistics from the referenced paper \cite{Maltezos2021}: Daily New Cases (DNC) and the effective reproductive number $R_e$.
 
 \paragraph{DNC}
 DNC is simply the number of newly infected human beings on a given day.
 
 \paragraph{Effective reproductive number}
-The effective reproductive number is one of two numbers associated with determining disease spread speed in epidemic theory. It is defined as \textit{the average number of secondary cases per infectious case in a population made up of both susceptible and non-susceptible hosts} \cite{Barratt2018}. If $\textrm{R}_\textrm{e} > 1$, then the number of cases will increase - start of epidemic. If $\textrm{R}_\textrm{e} = 1$, then the disease is endemic, which in the instance of Coronavirus means that it is not spreading. If $\textrm{R}_\textrm{e} < 1$ then there will a decline in the number of cases \cite{Barratt2018}. While there is no one single formula defining this number, the authors of the reference paper \cite{Maltezos2021} used the definition listed in equation~\ref{equation:effective-reproductive-number}
+The effective reproductive number is one of two numbers associated with determining disease spread speed in epidemic theory. It is defined as \textit{the average number of secondary cases per infectious case in a population made up of both susceptible and non-susceptible hosts} \cite{Barratt2018}. If $R_e > 1$, then the number of cases will increase - start of epidemic. If $R_e = 1$, then the disease is endemic, which in the instance of Coronavirus means that it is not spreading. If $R_e < 1$ then there will a decline in the number of cases \cite{Barratt2018}. While there is no one single formula defining this number, the authors of the reference paper \cite{Maltezos2021} used the definition listed in equation~\ref{equation:effective-reproductive-number}
 
 \begin{equation}
-	\textrm{R}_\textrm{e} = 1 + \ln\left(\frac{I_{t_i}}{I_{t_{i-1}}}\right)^\frac{1}{c}
+	R_e = 1 + \ln\left(\frac{I_{t_i}}{I_{t_{i-1}}}\right)^\frac{1}{c}
 	\label{equation:effective-reproductive-number}
 \end{equation}
 \noindent
@@ -166,7 +166,7 @@ The simulation of the spread of Coronavirus in this protocol is built on a \text
 	\item \textbf{R}ecovered/\textbf{R}emoved - humans that have either recovered or died (removed from simulation) and therefore cannot be infected and cannot infect again. 
 \end{itemize}
 
-When it comes to simulating the behaviour described in section~\ref{subsection:coronavirus}, it is paramount to include only processes that have an impact on the results. The aim of this protocol is to reproduce the Daily New Cases (DNC) and effective reproductive number $\textrm{R}_\textrm{e}$, as was stated in the introduction. For both of the monitored statistics, there are certain aspects of the sample case that need not be accounted for, e.g., dividing time intervals related to the health status of the human subject. The only health status needed for the purpose of simulating the spread of the virus is when the human is infectious, as it is during this period that the subject can infect susceptible humans. Therefore the only remaining aspects that ought be an integral part of the simulation are:
+When it comes to simulating the behaviour described in section~\ref{subsection:coronavirus}, it is paramount to include only processes that have an impact on the results. The aim of this protocol is to reproduce the Daily New Cases (DNC) and effective reproductive number $R_e$, as was stated in the introduction. For both of the monitored statistics, there are certain aspects of the sample case that need not be accounted for, e.g., dividing time intervals related to the health status of the human subject. The only health status needed for the purpose of simulating the spread of the virus is when the human is infectious, as it is during this period that the subject can infect susceptible humans. Therefore the only remaining aspects that ought be an integral part of the simulation are:
 \begin{itemize}
 	\item Daily movement - \nth{1} part of the sample case. The human subject travels and commutes (random process).
 	\item Physical distance - \nth{2} part of the sample case. The human subject is exposed to an infectious human being (random process).
@@ -319,11 +319,54 @@ end
 
 
 \section{Results}\label{section:results}
+Results obtained from the simulation can be seen in figure~\ref{figure:results-protocol} and the results from the reference paper \cite{Maltezos2021} can be found in figure~\ref{figure:results-reference-paper}.
+\par
+When comparing DNC results, it can be seen that the trend is comparable with both simulations exhibiting a sharp rise in cases from the beginning until 15-20 days into the simulation. Moreover, the gradual lessening of daily new cases eventually becomes zero about 50-60 days into the simulation - with minor deviations.
+
+\par
+When comparing results of the effective reproductive number, we can see that there are error bars present in figure~\ref{figure:rp-r-e}, however, they appear to be missing in figure~\ref{figure:results-r-e}. This is due to the fact that the authors in the paper do not clearly explain what these error bars represent - reproductive efforts for this indicator failed. Nevertheless, data obtained from the simulation seems to correspond to the trend obtained from the reference paper \cite{Maltezos2021} with some minor differences. The main difference stems in the minimum and maximum values, which in the case of the reference paper \cite{Maltezos2021} almost seem to have been calculated using a different formula than what the one found in equation~\ref{equation:effective-reproductive-number}. The main indicator for this reasoning is that The initial values for $R_e$ reach a maximum of 3, which would mean that the number of cases should have tripled in the first 5-6 days, which according to figure~\ref{figure:rp-dnc} does not seem to be the case. For reference, in order achieve the same initial $R_e$, the mean infection distance needs to be tripled in the simulation. Nonetheless, the overall rising and declining characteristics of the effective reproductive number are pertinent between the two simulations.
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/dnc.eps}
+		\caption{Daily new cases}
+		\label{figure:results-dnc}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/r_e.eps}
+		\caption{Effective reproductive number}
+		\label{figure:results-r-e}
+	\end{subfigure}
+	\caption{Graphs depicting the daily new cases and the effective reproductive number obtained from the simulation.}
+	\label{figure:results-protocol}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/dnc-orig.jpg}
+		\caption{Daily new cases}
+		\label{figure:rp-dnc}
+	\end{subfigure}%
+	\begin{subfigure}{.5\textwidth}
+		\centering
+		\includegraphics[width=\textwidth]{images/r_e-orig.jpg}
+		\caption{Effective reproductive number}
+		\label{figure:rp-r-e}
+	\end{subfigure}
+	\caption{Graphs depicting the daily new cases and the effective reproductive number obtained from the reference paper \cite{Maltezos2021}.}
+	\label{figure:results-reference-paper}
+\end{figure}
 
 
 
 
 \section{Conclusion}\label{section:conclusion}
+In summary, the simulation of the spread of Coronavirus was implemented in MATLAB based on the reference paper \cite{Maltezos2021} for the purpose of this assignment project for the Monte Carlo Method subject. The main objective of this work was to replicate results, specifically the number of daily new cases and the effective reproductive number from the reference paper \cite{Maltezos2021} (see figure~\ref{figure:results-reference-paper}). While the results overall seem correlatable, there are discrepancies which the author was not able to remove. The differences could have originated, for example, from the fact that some variables, parameters and means of calculating statistical data mentioned in the reference paper \cite{Maltezos2021} were open to interpretation. Another potential source of mismatching $R_e$ data is that the authors mention using an unspecified method of data filtering.
 
 
 
