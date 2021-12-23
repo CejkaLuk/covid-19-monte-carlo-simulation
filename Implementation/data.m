@@ -153,7 +153,7 @@ classdef data < handle
             legend('Daily new cases (DNC)', 'interpreter', 'latex')
             
             xlabel('Time [day]', 'interpreter', 'latex')
-            ylabel('Number of new cases per day', 'interpreter', 'latex')
+            ylabel('Number of new cases', 'interpreter', 'latex')
             
             set(gca,'TickLabelInterpreter','latex');
         end
@@ -181,16 +181,16 @@ classdef data < handle
                  'Color', dark_green, ...
                  'LineWidth', 1.5)
             
-            title('Effective reproductive number ($$R_e$$) development in MC simulation', ...
+            title('Effective reproductive number ($$R_\textrm{e}$$) development in MC simulation', ...
                   'interpreter', 'latex')
             
-            legend('Effective reproductive number $$R_e$$', ...
-                   'Threshold level $$R_e(0) = R_0 = 1$$', ...
-                   '13-Day Moving Average of $$R_e$$', ...
+            legend('Effective reproductive number $$R_\textrm{e}$$', ...
+                   'Threshold level $$R_\textrm{e}(0) = R_0 = 1$$', ...
+                   '13-Day Moving Average of $$R_\textrm{e}$$', ...
                    'interpreter', 'latex')
             
             xlabel('Time [day]', 'interpreter', 'latex')
-            ylabel('Daily $$R_e$$', 'interpreter', 'latex')
+            ylabel('$$R_\textrm{e}$$', 'interpreter', 'latex')
             
             set(gca,'TickLabelInterpreter','latex');
         end
