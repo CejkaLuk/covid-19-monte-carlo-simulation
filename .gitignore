@@ -1,2 +1,11 @@
 **.asv
 Matlab/simulation_gifs/*
+**.aux
+**.bbl
+**.blg
+**.log
+**.out
+**.synctex.gz
+**.toc
+**-eps-converted-to.pdf
+**-eps-converted-to.pdf
